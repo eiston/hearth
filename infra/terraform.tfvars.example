@@ -1,0 +1,5 @@
+project_id      = "your-project-id"
+region          = "us-central1"
+service_name    = "hearth-api"
+repository_name = "hearth-repo"
+container_image = "us-central1-docker.pkg.dev/your-project-id/hearth-repo/api:latest"
