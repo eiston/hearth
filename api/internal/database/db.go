@@ -11,7 +11,7 @@ import (
 
 var DB *sql.DB
 
-func Connect() {
+func Connect() string {
 	var err error
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
@@ -19,8 +19,8 @@ func Connect() {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
 
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -33,4 +33,5 @@ func Connect() {
 	}
 
 	log.Println("Successfully connected to the database!")
+	return connStr
 }

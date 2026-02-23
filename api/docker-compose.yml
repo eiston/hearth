@@ -11,6 +11,7 @@ services:
       - DB_PASSWORD=postgres
       - DB_NAME=hearth_db
       - DB_PORT=5432
+      - GOOGLE_CLIENT_ID=1073169483760-btgmjclc49tmdmknenon5g43fvluilc8.apps.googleusercontent.com
     depends_on:
       db:
         condition: service_healthy
@@ -26,7 +27,7 @@ services:
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
