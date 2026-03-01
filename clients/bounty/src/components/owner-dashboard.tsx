@@ -1,12 +1,24 @@
 "use client";
 
-
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertiesCatalog } from "@/components/properties-catalog";
 import { TaskEngine } from "@/components/task-engine";
 import { FinancialsDashboard } from "@/components/financials-dashboard";
 
 export function OwnerDashboard() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const tab = searchParams.get("tab");
+    const activeTab = tab === "tasks" || tab === "financials" || tab === "properties" ? tab : "properties";
+
+    const handleTabChange = (nextTab: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", nextTab);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
+
     return (
         <div className="space-y-8">
             <div>
@@ -16,7 +28,7 @@ export function OwnerDashboard() {
                 </p>
             </div>
 
-            <Tabs defaultValue="properties" className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
                 <TabsList className="bg-muted/50 border">
                     <TabsTrigger value="properties">Properties</TabsTrigger>
                     <TabsTrigger value="tasks">Bounty Engine</TabsTrigger>

@@ -13,9 +13,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { AddTrustedWorkersInputItem } from "@/lib/app-types";
+import type { AddTrustedWorkersInputItem, PersonBasicInfo } from "@/lib/app-types";
 
-type TrustedWorkerRecommendation = {
+export type TrustedWorkerRecommendation = {
   id: string;
   name: string;
   email: string;
@@ -32,16 +32,6 @@ type TrustedWorkerDraft = {
 };
 
 const EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
-
-const TRUSTED_WORKER_RECOMMENDATIONS: TrustedWorkerRecommendation[] = [
-  { id: "rec-1", name: "Shirley Lyu", email: "shirley.lyu@fieldops.io", initials: "SL", avatarUrl: "https://i.pravatar.cc/80?img=47" },
-  { id: "rec-2", name: "Alex Baker", email: "abaker@careers.vext.com", initials: "AB", avatarUrl: "https://i.pravatar.cc/80?img=32" },
-  { id: "rec-3", name: "Alexandra Baker", email: "abaker@yext.com", initials: "AB", avatarUrl: "https://i.pravatar.cc/80?img=31" },
-  { id: "rec-4", name: "Ali Rashid", email: "ali.rashid@huawei.com", initials: "AR", avatarUrl: "https://i.pravatar.cc/80?img=12" },
-  { id: "rec-5", name: "Amit Sharma", email: "amit@emojent.com", initials: "AS", avatarUrl: "https://i.pravatar.cc/80?img=15" },
-  { id: "rec-6", name: "Mark Anthony Catalan", email: "ca_onlineorder_info@dell.com", initials: "MC" },
-  { id: "rec-7", name: "Aiden Feng", email: "aiden.yiting.feng@gmail.com", initials: "AF" },
-];
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -93,11 +83,13 @@ export function TrustedWorkerPickerDialog({
   open,
   onOpenChange,
   existingEmails,
+  recommendations = [],
   onDone,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existingEmails: string[];
+  recommendations?: TrustedWorkerRecommendation[] | PersonBasicInfo[];
   onDone: (workers: AddTrustedWorkersInputItem[]) => Promise<void> | void;
 }) {
   const [inputValue, setInputValue] = useState("");
@@ -107,7 +99,16 @@ export function TrustedWorkerPickerDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const recommendations = TRUSTED_WORKER_RECOMMENDATIONS;
+  const recommendationItems: TrustedWorkerRecommendation[] = useMemo(
+    () =>
+      recommendations.map((item) => ({
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        initials: item.initials,
+      })),
+    [recommendations],
+  );
   const selectedEmails = useMemo(
     () => new Set(selectedWorkers.map((worker) => worker.email.toLowerCase())),
     [selectedWorkers],
@@ -122,7 +123,8 @@ export function TrustedWorkerPickerDialog({
     if (!query) {
       return [];
     }
-    return recommendations
+    return recommendationItems
+      .filter((worker) => !!worker.email)
       .filter((worker) => !existingEmailSet.has(worker.email.toLowerCase()))
       .filter((worker) => !selectedEmails.has(worker.email.toLowerCase()))
       .filter(
@@ -130,7 +132,7 @@ export function TrustedWorkerPickerDialog({
           worker.name.toLowerCase().includes(query) || worker.email.toLowerCase().includes(query),
       )
       .slice(0, 8);
-  }, [existingEmailSet, inputValue, recommendations, selectedEmails]);
+  }, [existingEmailSet, inputValue, recommendationItems, selectedEmails]);
 
   const showSuggestions = isFocused && inputValue.trim().length > 0 && suggestions.length > 0;
 
@@ -147,7 +149,7 @@ export function TrustedWorkerPickerDialog({
   };
 
   const addSuggestion = (worker: TrustedWorkerRecommendation) => {
-    addDraft(buildDraftFromEmail(worker.email, recommendations));
+    addDraft(buildDraftFromEmail(worker.email, recommendationItems));
     setInputValue("");
     setHighlightedIndex(0);
     inputRef.current?.focus();
@@ -165,7 +167,7 @@ export function TrustedWorkerPickerDialog({
     }
 
     const emails = extractEmails(raw);
-    emails.forEach((email) => addDraft(buildDraftFromEmail(email, recommendations)));
+    emails.forEach((email) => addDraft(buildDraftFromEmail(email, recommendationItems)));
     setInputValue("");
     setHighlightedIndex(0);
   };
@@ -177,7 +179,7 @@ export function TrustedWorkerPickerDialog({
       return;
     }
     event.preventDefault();
-    emails.forEach((email) => addDraft(buildDraftFromEmail(email, recommendations)));
+    emails.forEach((email) => addDraft(buildDraftFromEmail(email, recommendationItems)));
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -225,12 +227,12 @@ export function TrustedWorkerPickerDialog({
   const handleDone = async () => {
     if (inputValue.trim()) {
       const pending = extractEmails(inputValue);
-      pending.forEach((email) => addDraft(buildDraftFromEmail(email, recommendations)));
+      pending.forEach((email) => addDraft(buildDraftFromEmail(email, recommendationItems)));
       setInputValue("");
     }
 
     const draftsToSubmit = (() => {
-      const pendingFromInput = extractEmails(inputValue).map((email) => buildDraftFromEmail(email, recommendations)).filter(Boolean) as TrustedWorkerDraft[];
+      const pendingFromInput = extractEmails(inputValue).map((email) => buildDraftFromEmail(email, recommendationItems)).filter(Boolean) as TrustedWorkerDraft[];
       const merged = [...selectedWorkers];
       for (const pending of pendingFromInput) {
         if (!merged.some((item) => item.email.toLowerCase() === pending.email.toLowerCase())) {

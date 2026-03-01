@@ -16,9 +16,11 @@ import type {
   Bounty,
   CreateBountyInput,
   CreatePropertyInput,
+  CreateTaskTemplateInput,
   OwnerBountyLane,
   Property,
   Role,
+  TaskTemplate,
   UpdatePropertyInput,
 } from "@/lib/app-types";
 import { mockApi } from "@/lib/mock-api";
@@ -27,11 +29,14 @@ import { initialAppState } from "@/lib/mock-seed";
 type AppAction =
   | { type: "hydrate"; snapshot: AppStateSnapshot }
   | { type: "setRole"; role: Role }
+  | { type: "setDefaultRole"; role: Role }
+  | { type: "setGlobalTrustedWorkers"; workers: AppStateSnapshot["globalTrustedWorkers"] }
   | { type: "upsertProperty"; property: Property }
   | { type: "addProperty"; property: Property }
   | { type: "upsertBounty"; bounty: Bounty }
   | { type: "removeBounty"; bountyId: string }
-  | { type: "setBounties"; bounties: Bounty[] };
+  | { type: "setBounties"; bounties: Bounty[] }
+  | { type: "addTaskTemplate"; taskTemplate: TaskTemplate };
 
 function appReducer(state: AppStateSnapshot | null, action: AppAction): AppStateSnapshot | null {
   if (action.type === "hydrate") {
@@ -45,6 +50,10 @@ function appReducer(state: AppStateSnapshot | null, action: AppAction): AppState
   switch (action.type) {
     case "setRole":
       return { ...state, role: action.role };
+    case "setDefaultRole":
+      return { ...state, defaultRole: action.role };
+    case "setGlobalTrustedWorkers":
+      return { ...state, globalTrustedWorkers: action.workers };
     case "addProperty":
       return { ...state, properties: [action.property, ...state.properties] };
     case "upsertProperty":
@@ -71,6 +80,11 @@ function appReducer(state: AppStateSnapshot | null, action: AppAction): AppState
         ...state,
         bounties: action.bounties,
       };
+    case "addTaskTemplate":
+      return {
+        ...state,
+        taskTemplates: [action.taskTemplate, ...state.taskTemplates],
+      };
     default:
       return state;
   }
@@ -79,11 +93,15 @@ function appReducer(state: AppStateSnapshot | null, action: AppAction): AppState
 interface AppActions {
   setRole: (role: Role) => Promise<void>;
   toggleRole: () => Promise<void>;
+  setDefaultRole: (role: Role) => Promise<void>;
   addProperty: (input: CreatePropertyInput) => Promise<void>;
   updateProperty: (propertyId: string, input: UpdatePropertyInput) => Promise<void>;
   updatePropertyInstructions: (propertyId: string, instructions: string) => Promise<void>;
   addTrustedWorkers: (propertyId: string, workers: AddTrustedWorkersInputItem[]) => Promise<void>;
-  createBounty: (input: CreateBountyInput) => Promise<void>;
+  addGlobalTrustedWorkers: (workers: AddTrustedWorkersInputItem[]) => Promise<void>;
+  removeGlobalTrustedWorker: (workerId: string) => Promise<void>;
+  createBounty: (input: CreateBountyInput) => Promise<Bounty>;
+  addTaskTemplate: (input: CreateTaskTemplateInput) => Promise<TaskTemplate>;
   toggleBountyBoost: (bountyId: string) => Promise<void>;
   deleteBounty: (bountyId: string) => Promise<void>;
   acceptBounty: (bountyId: string) => Promise<void>;
@@ -127,6 +145,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       if (savedRole === "owner" || savedRole === "worker") {
         snapshot.role = savedRole;
         await mockApi.setRole(savedRole);
+      } else if (snapshot.role !== snapshot.defaultRole) {
+        snapshot.role = snapshot.defaultRole;
+        await mockApi.setRole(snapshot.defaultRole);
       }
       if (!cancelled) {
         dispatch({ type: "hydrate", snapshot });
@@ -181,6 +202,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const nextRole = currentRole === "owner" ? "worker" : "owner";
         await actionsRef.current.setRole(nextRole);
       },
+      async setDefaultRole(role) {
+        const nextRole = await mockApi.setDefaultRole(role);
+        dispatch({ type: "setDefaultRole", role: nextRole });
+      },
       async addProperty(input) {
         const property = await mockApi.addProperty(input);
         dispatch({ type: "addProperty", property });
@@ -200,9 +225,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const property = await mockApi.addTrustedWorkers(propertyId, workers);
         dispatch({ type: "upsertProperty", property });
       },
+      async addGlobalTrustedWorkers(workers) {
+        if (workers.length === 0) {
+          return;
+        }
+        const nextWorkers = await mockApi.addGlobalTrustedWorkers(workers);
+        dispatch({ type: "setGlobalTrustedWorkers", workers: nextWorkers });
+      },
+      async removeGlobalTrustedWorker(workerId) {
+        const nextWorkers = await mockApi.removeGlobalTrustedWorker(workerId);
+        dispatch({ type: "setGlobalTrustedWorkers", workers: nextWorkers });
+      },
       async createBounty(input) {
         const bounty = await mockApi.createBounty(input);
         dispatch({ type: "upsertBounty", bounty });
+        return bounty;
+      },
+      async addTaskTemplate(input) {
+        const taskTemplate = await mockApi.addTaskTemplate(input);
+        dispatch({ type: "addTaskTemplate", taskTemplate });
+        return taskTemplate;
       },
       async toggleBountyBoost(bountyId) {
         const bounty = await mockApi.toggleBountyBoost(bountyId);

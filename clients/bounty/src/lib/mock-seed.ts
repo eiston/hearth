@@ -1,8 +1,30 @@
 import type { AppStateSnapshot } from "@/lib/app-types";
 
+const REMINDER_PROPERTIES = {
+  "1235": { id: "1235", address: "1235 Maple Street" },
+  "1002": { id: "1002", address: "1002 Oakwood Ave" },
+  "2003": { id: "2003", address: "45 Pine Street" },
+  "2004": { id: "2004", address: "789 Willow Drive" },
+  "2005": { id: "2005", address: "321 Cedar Blvd" },
+  "2006": { id: "2006", address: "555 Birch Rd" },
+  "2007": { id: "2007", address: "888 Elm Court" },
+} as const;
+
+const ALL_REMINDER_PROPERTIES = Object.values(REMINDER_PROPERTIES);
+
+const daysFromNowIso = (days: number) => {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
 export const initialAppState: AppStateSnapshot = {
   role: "owner",
+  defaultRole: "owner",
   currentWorkerId: "w1",
+  signedInUsers: [],
+  globalTrustedWorkers: [],
   workers: [
     {
       id: "w1",
@@ -130,6 +152,7 @@ export const initialAppState: AppStateSnapshot = {
       proofPhotosUploaded: 0,
       tenantBridgeEnabled: true,
       recursiveSchedulingEnabled: false,
+      deadlineAt: "2026-02-25T16:00:00.000Z",
     },
     {
       id: "bounty-2",
@@ -148,6 +171,7 @@ export const initialAppState: AppStateSnapshot = {
       proofPhotosUploaded: 0,
       tenantBridgeEnabled: true,
       recursiveSchedulingEnabled: false,
+      deadlineAt: "2026-02-24T18:00:00.000Z",
     },
     {
       id: "bounty-3",
@@ -166,6 +190,7 @@ export const initialAppState: AppStateSnapshot = {
       proofPhotosUploaded: 0,
       tenantBridgeEnabled: true,
       recursiveSchedulingEnabled: false,
+      deadlineAt: "2026-02-24T20:30:00.000Z",
     },
     {
       id: "bounty-4",
@@ -206,7 +231,7 @@ export const initialAppState: AppStateSnapshot = {
       id: "bounty-6",
       title: "Dryer Vent Cleaning",
       propertyId: "2005",
-      ownerLane: "pending_payment",
+      ownerLane: "pending_payout",
       price: 95,
       type: "Fixed Price",
       description:
@@ -272,6 +297,8 @@ export const initialAppState: AppStateSnapshot = {
     {
       id: "r1",
       title: "Winterize Pipes",
+      dueDateISO: daysFromNowIso(5),
+      properties: [...ALL_REMINDER_PROPERTIES],
       propertiesLabel: "Properties: All",
       badgeLabel: "Due in 5 days",
       badgeVariant: "destructive",
@@ -279,9 +306,83 @@ export const initialAppState: AppStateSnapshot = {
     {
       id: "r2",
       title: "HVAC Filter Change",
+      dueDateISO: daysFromNowIso(14),
+      properties: [REMINDER_PROPERTIES["1235"]],
       propertiesLabel: "Properties: 1235 Maple",
       badgeLabel: "Due in 14 days",
       badgeVariant: "outline",
+    },
+    {
+      id: "r3",
+      title: "Smoke Alarm Battery Check",
+      dueDateISO: daysFromNowIso(2),
+      properties: [...ALL_REMINDER_PROPERTIES],
+      propertiesLabel: "Properties: All",
+      badgeLabel: "Due in 2 days",
+      badgeVariant: "destructive",
+    },
+    {
+      id: "r4",
+      title: "Salt Bin Refill",
+      dueDateISO: daysFromNowIso(2),
+      properties: [REMINDER_PROPERTIES["1002"]],
+      propertiesLabel: "Properties: 1002 Oakwood Ave",
+      badgeLabel: "Due in 2 days",
+      badgeVariant: "secondary",
+    },
+    {
+      id: "r5",
+      title: "Exterior Light Inspection",
+      dueDateISO: daysFromNowIso(7),
+      properties: [REMINDER_PROPERTIES["2003"]],
+      propertiesLabel: "Properties: 45 Pine Street",
+      badgeLabel: "Due in 1 week",
+      badgeVariant: "outline",
+    },
+    {
+      id: "r6",
+      title: "Driveway De-icing Check",
+      dueDateISO: daysFromNowIso(9),
+      properties: [REMINDER_PROPERTIES["2004"]],
+      propertiesLabel: "Properties: 789 Willow Drive",
+      badgeLabel: "Due in 9 days",
+      badgeVariant: "secondary",
+    },
+    {
+      id: "r7",
+      title: "Gutter Debris Inspection",
+      dueDateISO: daysFromNowIso(14),
+      properties: [REMINDER_PROPERTIES["2005"]],
+      propertiesLabel: "Properties: 321 Cedar Blvd",
+      badgeLabel: "Due in 14 days",
+      badgeVariant: "outline",
+    },
+    {
+      id: "r8",
+      title: "Boiler Pressure Check",
+      dueDateISO: daysFromNowIso(18),
+      properties: [REMINDER_PROPERTIES["2006"]],
+      propertiesLabel: "Properties: 555 Birch Rd",
+      badgeLabel: "Due in 18 days",
+      badgeVariant: "default",
+    },
+    {
+      id: "r9",
+      title: "Garage Door Sensor Test",
+      dueDateISO: daysFromNowIso(21),
+      properties: [REMINDER_PROPERTIES["2007"]],
+      propertiesLabel: "Properties: 888 Elm Court",
+      badgeLabel: "Due in 3 weeks",
+      badgeVariant: "outline",
+    },
+    {
+      id: "r10",
+      title: "Spring Yard Cleanup Prep",
+      dueDateISO: daysFromNowIso(21),
+      properties: [...ALL_REMINDER_PROPERTIES],
+      propertiesLabel: "Properties: All",
+      badgeLabel: "Due in 3 weeks",
+      badgeVariant: "secondary",
     },
   ],
   workerFinancialSummary: {

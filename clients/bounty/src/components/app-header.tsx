@@ -6,9 +6,12 @@ import { useRole } from "./role-provider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export function AppHeader() {
     const { role, toggleRole } = useRole()
+    const { data: session, status } = useSession();
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -25,6 +28,12 @@ export function AppHeader() {
                         {/* Search or other items could go in the center */}
                     </div>
                     <nav className="flex items-center space-x-4">
+                        <Button asChild variant="ghost" size="sm">
+                            <Link href="/settings">Settings</Link>
+                        </Button>
+                        <div className="hidden text-sm text-muted-foreground md:block">
+                            {session?.user?.email}
+                        </div>
                         <div className="flex items-center space-x-2 border rounded-full px-3 py-1 bg-muted/50">
                             <Label htmlFor="role-mode" className="text-xs font-medium cursor-pointer">
                                 {role === "owner" ? "Owner Mode" : "Worker Mode"}
@@ -44,6 +53,15 @@ export function AppHeader() {
                             <Badge variant="outline" className="font-mono bg-secondary text-secondary-foreground">
                                 WORKER
                             </Badge>
+                        )}
+                        {status === "authenticated" ? (
+                            <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/login" })}>
+                                Sign out
+                            </Button>
+                        ) : (
+                            <Button variant="outline" size="sm" onClick={() => signIn("google")}>
+                                Sign in
+                            </Button>
                         )}
                     </nav>
                 </div>

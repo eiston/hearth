@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type DragEvent } from "react";
+import { useRouter } from "next/navigation";
 import type { Bounty, OwnerBountyLane } from "@/lib/app-types";
 import { useAppActions, useAppState } from "@/lib/app-state";
 import { BOARD_LANES, DRAGGABLE_LANES } from "@/components/task-engine/board-config";
@@ -9,8 +10,9 @@ import { getPropertyLabel, getWorker, inferOwnerLane } from "@/components/task-e
 import { TaskEngineLane } from "@/components/task-engine/task-lane";
 
 export function TaskEngine() {
-  const { bounties, properties, taskTemplates, ui, workers } = useAppState();
-  const { createBounty, moveBountyLane } = useAppActions();
+  const router = useRouter();
+  const { bounties, properties, workers } = useAppState();
+  const { moveBountyLane } = useAppActions();
 
   const [draggingBountyId, setDraggingBountyId] = useState<string | null>(null);
   const [hoverLane, setHoverLane] = useState<OwnerBountyLane | null>(null);
@@ -95,22 +97,7 @@ export function TaskEngine() {
           <p className="text-sm text-muted-foreground">Kanban workflow for dispatch, execution, review, and payout.</p>
         </div>
 
-        <TaskEngineCreateBountyDialog
-          properties={properties}
-          taskTemplates={taskTemplates}
-          ui={ui}
-          onCreate={async (input) => {
-            await createBounty({
-              propertyId: input.propertyId,
-              title: input.title,
-              description: input.description,
-              price: input.price,
-              type: "Fixed Price",
-              tenantBridgeEnabled: input.tenantBridgeEnabled,
-              recursiveSchedulingEnabled: input.recursiveSchedulingEnabled,
-            });
-          }}
-        />
+        <TaskEngineCreateBountyDialog />
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -134,6 +121,7 @@ export function TaskEngine() {
               }}
               onCardDragStart={handleCardDragStart}
               onCardDragEnd={handleCardDragEnd}
+              onCardOpen={(bounty) => router.push(`/tasks/${bounty.id}`)}
             />
           ))}
         </div>

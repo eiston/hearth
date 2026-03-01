@@ -19,6 +19,7 @@ interface TaskEngineLaneProps {
   onLaneDrop: (laneId: OwnerBountyLane, event: DragEvent<HTMLDivElement>) => void;
   onCardDragStart: (bounty: Bounty, event: DragEvent<HTMLDivElement>) => void;
   onCardDragEnd: () => void;
+  onCardOpen: (bounty: Bounty) => void;
 }
 
 export function TaskEngineLane({
@@ -36,6 +37,7 @@ export function TaskEngineLane({
   onLaneDrop,
   onCardDragStart,
   onCardDragEnd,
+  onCardOpen,
 }: TaskEngineLaneProps) {
   return (
     <section
@@ -69,6 +71,7 @@ export function TaskEngineLane({
               isDragging={draggingBountyId === bounty.id}
               onDragStart={(event) => onCardDragStart(bounty, event)}
               onDragEnd={onCardDragEnd}
+              onOpen={() => onCardOpen(bounty)}
             />
           );
         })}

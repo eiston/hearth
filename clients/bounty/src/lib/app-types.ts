@@ -14,6 +14,13 @@ export interface TrustedWorkerRef {
   initials: string;
 }
 
+export interface PersonBasicInfo {
+  id: string;
+  name: string;
+  email: string;
+  initials: string;
+}
+
 export interface Property {
   id: string;
   address: string;
@@ -30,7 +37,7 @@ export interface Property {
 }
 
 export type WorkerBountyStatus = "available" | "accepted" | "pending_approval";
-export type OwnerBountyLane = "backlog" | "active" | "in_progress" | "review" | "pending_payment";
+export type OwnerBountyLane = "backlog" | "active" | "in_progress" | "review" | "pending_payout";
 
 export interface Bounty {
   id: string;
@@ -48,10 +55,20 @@ export interface Bounty {
   proofPhotosUploaded: number;
   tenantBridgeEnabled?: boolean;
   recursiveSchedulingEnabled?: boolean;
+  recurrenceCadence?: "daily" | "weekly" | "biweekly" | "monthly" | null;
+  deadlineAt?: string | null;
+  imageUrls?: string[];
 }
 
 export interface TaskTemplate {
   id: string;
+  label: string;
+  title: string;
+  description: string;
+  price: number;
+}
+
+export interface CreateTaskTemplateInput {
   label: string;
   title: string;
   description: string;
@@ -86,9 +103,16 @@ export interface PendingPayout {
   property: string;
 }
 
+export interface TaskReminderPropertyRef {
+  id: string;
+  address: string;
+}
+
 export interface TaskReminder {
   id: string;
   title: string;
+  dueDateISO: string;
+  properties: TaskReminderPropertyRef[];
   propertiesLabel: string;
   badgeLabel: string;
   badgeVariant: "default" | "secondary" | "destructive" | "outline";
@@ -108,8 +132,11 @@ export interface UiSettings {
 
 export interface AppStateSnapshot {
   role: Role;
+  defaultRole: Role;
   currentWorkerId: string;
   workers: Worker[];
+  signedInUsers: PersonBasicInfo[];
+  globalTrustedWorkers: PersonBasicInfo[];
   properties: Property[];
   bounties: Bounty[];
   taskTemplates: TaskTemplate[];
@@ -151,4 +178,7 @@ export interface CreateBountyInput {
   type: string;
   tenantBridgeEnabled: boolean;
   recursiveSchedulingEnabled: boolean;
+  recurrenceCadence?: "daily" | "weekly" | "biweekly" | "monthly" | null;
+  deadlineAt?: string | null;
+  imageUrls?: string[];
 }

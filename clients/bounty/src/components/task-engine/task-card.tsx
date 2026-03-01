@@ -1,4 +1,4 @@
-import type { DragEventHandler } from "react";
+import type { DragEventHandler, KeyboardEventHandler } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,6 +20,7 @@ interface TaskEngineCardProps {
   isDragging: boolean;
   onDragStart: DragEventHandler<HTMLDivElement>;
   onDragEnd: DragEventHandler<HTMLDivElement>;
+  onOpen: () => void;
 }
 
 export function TaskEngineCard({
@@ -30,15 +31,29 @@ export function TaskEngineCard({
   isDragging,
   onDragStart,
   onDragEnd,
+  onOpen,
 }: TaskEngineCardProps) {
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onOpen();
+    }
+  };
+
   return (
     <Card
       draggable={isDraggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onClick={onOpen}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      aria-label={`Open details for ${bounty.title}`}
       className={cn(
-        "gap-0 py-0 border shadow-sm transition",
+        "gap-0 py-0 border shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
         isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+        !isDragging && "hover:border-primary/30 hover:bg-accent/20",
         isDragging && "opacity-60",
       )}
     >
